@@ -62,12 +62,19 @@ export class GameManager extends Component {
     @property
     gap = 16;
 
+    @property
+    swipeMinDistance = 18;
+
+    @property
+    swipeDirectionRatio = 1.12;
+
     private grid: number[][] = [];
     private tileNodes: (Node | null)[][] = [];
     private score = 0;
     private best = 0;
     private touchStartX = 0;
     private touchStartY = 0;
+    private hasTouchStart = false;
     private scoreGainBasePos: Vec3 | null = null;
     private isAnimating = false;
 
@@ -79,6 +86,7 @@ export class GameManager extends Component {
         const touchTarget = this.tileLayer ?? this.node;
         touchTarget.on(Node.EventType.TOUCH_START, this.onTouchStart, this);
         touchTarget.on(Node.EventType.TOUCH_END, this.onTouchEnd, this);
+        touchTarget.on(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
     }
 
     onDisable() {
@@ -86,6 +94,7 @@ export class GameManager extends Component {
         const touchTarget = this.tileLayer ?? this.node;
         touchTarget.off(Node.EventType.TOUCH_START, this.onTouchStart, this);
         touchTarget.off(Node.EventType.TOUCH_END, this.onTouchEnd, this);
+        touchTarget.off(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
     }
 
     start() {
@@ -164,26 +173,56 @@ export class GameManager extends Component {
         const pos = event.getUILocation();
         this.touchStartX = pos.x;
         this.touchStartY = pos.y;
+        this.hasTouchStart = true;
     }
 
     private onTouchEnd(event: EventTouch) {
-        if (this.gameOverPanel?.active || this.isAnimating) {
+        if (this.gameOverPanel?.active || this.isAnimating || !this.hasTouchStart) {
             return;
         }
 
         const pos = event.getUILocation();
-        const dx = pos.x - this.touchStartX;
-        const dy = pos.y - this.touchStartY;
+        this.handleSwipe(pos.x, pos.y);
+    }
 
-        if (Math.abs(dx) < 30 && Math.abs(dy) < 30) {
+    private onTouchCancel(event: EventTouch) {
+        if (this.gameOverPanel?.active || this.isAnimating || !this.hasTouchStart) {
             return;
         }
 
-        if (Math.abs(dx) > Math.abs(dy)) {
-            this.move(dx > 0 ? 'right' : 'left');
-        } else {
-            this.move(dy > 0 ? 'up' : 'down');
+        const pos = event.getUILocation();
+        this.handleSwipe(pos.x, pos.y);
+    }
+
+    private handleSwipe(endX: number, endY: number) {
+        const dx = endX - this.touchStartX;
+        const dy = endY - this.touchStartY;
+        this.hasTouchStart = false;
+
+        const absX = Math.abs(dx);
+        const absY = Math.abs(dy);
+        const minDistance = Math.max(8, this.swipeMinDistance);
+        const axisRatio = Math.max(1, this.swipeDirectionRatio);
+
+        // Nhẹ tay vẫn nhận, nhưng tap/drag ngắn sẽ không gây move.
+        if (Math.max(absX, absY) < minDistance) {
+            return;
         }
+
+        // Tránh nhận nhầm khi vuốt chéo quá cân bằng.
+        if (absX > absY * axisRatio) {
+            this.move(dx > 0 ? 'right' : 'left');
+            return;
+        }
+
+        if (absY > absX * axisRatio) {
+            this.move(dy > 0 ? 'up' : 'down');
+            return;
+        }
+
+        // Trường hợp chéo gần cân bằng: ưu tiên trục lớn hơn.
+        if (absX >= absY) this.move(dx > 0 ? 'right' : 'left');
+        else this.move(dy > 0 ? 'up' : 'down');
     }
 
     private move(direction: Direction) {
