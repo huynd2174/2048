@@ -1,0 +1,20 @@
+{
+    "version": "1.0.1",
+    "data": {
+        "paths": [
+            "scenes",
+            "scripts",
+            "pretabs",
+            "textures",
+            "fonts",
+            "scenes\\Game.scene",
+            "background",
+            "background\\white_16x16.png",
+            "background\\white_rounded.png",
+            "scripts\\GameManager.ts",
+            "scripts\\ResponsiveView.ts",
+            "scripts\\TileView.ts",
+            "pretabs\\Tile.prefab"
+        ]
+    }
+}

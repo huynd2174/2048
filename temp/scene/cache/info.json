@@ -1,0 +1,11 @@
+{
+    "systemInfo": {
+        "arch": "x64",
+        "cpu": "11th Gen Intel(R) Core(TM) i5-11400F @ 2.60GHz",
+        "version": "Windows 11 Pro"
+    },
+    "sceneListMap": {
+        "cd2c9166-1be3-427d-99ba-b89b460a24f9": "C:\\Users\\Onehit\\NewProject_2\\assets\\scenes\\Game.scene"
+    },
+    "deviceMd5": "e62f2685b088b902674bad8d8db8f135"
+}
